@@ -11,12 +11,16 @@ action "run", :description => "Run a command" do
             :prompt      => "Command",
             :description => "Command to run",
             :type        => :string,
+            :validation  => '.*',
+            :maxlength   => 10 * 1024,
             :optional    => false
 
     input   :user,
             :prompt      => "User",
             :description => "User to run command as",
             :type        => :string,
+            :validation  => '.*',
+            :maxlength   => 1024,
             :optional    => true
 
     output  :stdout,
