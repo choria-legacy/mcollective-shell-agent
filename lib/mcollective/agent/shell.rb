@@ -33,16 +33,17 @@ module MCollective
         while !rd_fds.empty?
           rds, = IO.select(rd_fds)
           rds.each do |readable|
-            Log.warn("readable #{readable.inspect}")
             case readable
             when stdout_rd
-              stdout += stdout_rd.read
-              if stdout_rd.eof?
+              begin
+                stdout += stdout_rd.readpartial(1024)
+              rescue EOFError
                 rd_fds.delete(stdout_rd)
               end
             when stderr_rd
-              stderr += stderr_rd.read
-              if stderr_rd.eof?
+              begin
+                stderr += stderr_rd.readpartial(1024)
+              rescue EOFError
                 rd_fds.delete(stderr_rd)
               end
             else

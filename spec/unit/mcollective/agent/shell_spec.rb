@@ -30,6 +30,13 @@ module MCollective
           result[:exitcode].should == 0
           result[:stdout].should == "flirble wirble\n" * 8000
         end
+
+        it 'should cope with large amounts of output on both channels' do
+          result = agent.send(:run_command, :command => %{ruby -e '8000.times { STDOUT.puts "flirble wirble"; STDERR.puts "flooble booble" }'})
+          result[:exitcode].should == 0
+          result[:stdout].should == "flirble wirble\n" * 8000
+          result[:stderr].should == "flooble booble\n" * 8000
+        end
       end
     end
   end
