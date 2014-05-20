@@ -15,7 +15,7 @@ module MCollective
         stdout_rd, stdout_wr = IO.pipe
         stderr_rd, stderr_wr = IO.pipe
         options = {
-          #:chdir => "/",
+          :chdir => "/",
           :out => stdout_wr,
           :err => stderr_wr,
         }
