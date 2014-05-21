@@ -3,14 +3,17 @@ module MCollective
     class Shell<RPC::Agent
       action 'run' do
         result = run_command(request.data)
-        reply[:exitcode] = result[:exitcode]
-        reply[:stdout] = result[:stdout]
-        reply[:stderr] = result[:stderr]
+        result.each do |k,v|
+          reply[k] = v
+        end
       end
 
       private
 
       def run_command(request = {})
+        # a timeout of 0 waits forever
+        timeout = request[:timeout] || 0
+
         reply = {}
         stdout_rd, stdout_wr = IO.pipe
         stderr_rd, stderr_wr = IO.pipe
@@ -29,44 +32,58 @@ module MCollective
 
         stdout = ''
         stderr = ''
-        rd_fds = [ stdout_rd, stderr_rd ]
-        while !rd_fds.empty?
-          rds, = IO.select(rd_fds)
-          rds.each do |readable|
-            case readable
-            when stdout_rd
-              begin
-                stdout += stdout_rd.readpartial(1024)
-              rescue EOFError
-                rd_fds.delete(stdout_rd)
+        success = true
+        exitcode = nil
+
+        Log.warn("timeout is #{timeout}")
+
+        begin
+          Timeout::timeout(timeout) do
+            rd_fds = [ stdout_rd, stderr_rd ]
+            while !rd_fds.empty?
+              rds, = IO.select(rd_fds)
+              rds.each do |readable|
+                case readable
+                when stdout_rd
+                  begin
+                    #stdout += stdout_rd.readpartial(1024)
+                    stdout += stdout_rd.readpartial(1024)
+                  rescue EOFError
+                    rd_fds.delete(stdout_rd)
+                  end
+                when stderr_rd
+                  begin
+                    stderr += stderr_rd.readpartial(1024)
+                  rescue EOFError
+                    rd_fds.delete(stderr_rd)
+                  end
+                else
+                  Log.error("Unexpected fd #{readable.inspect}")
+                end
               end
-            when stderr_rd
-              begin
-                stderr += stderr_rd.readpartial(1024)
-              rescue EOFError
-                rd_fds.delete(stderr_rd)
-              end
-            else
-              Log.error("Unexpected fd #{readable.inspect}")
             end
+          end
+        rescue Timeout::Error
+          success = false
+          ::Process.kill('TERM', pid)
+        ensure
+          waited_pid = Process.waitpid(pid)
+          Log.warn("waitpid(#{pid}) -> #{waited_pid}")
+
+          if Util.windows?
+            # On win32 $? doesn't seem to get set - probably need to call GetExitCode
+            exitcode = 0
+          else
+            exitcode = $?.exitstatus
           end
         end
 
-        Log.warn("drained output")
-
-        waited_pid = Process.waitpid(pid)
-        Log.warn("waitpid(#{pid}) -> #{waited_pid}")
-
-        reply[:stdout] = stdout
-        reply[:stderr] = stderr
-
-        # On win32 $? doesn't seem to get set
-        if Util.windows?
-          reply[:exitcode] = 0
-        else
-          reply[:exitcode] = $?.exitstatus
-        end
-        return reply
+        return {
+          :stdout => stdout,
+          :stderr => stderr,
+          :success => success,
+          :exitcode => exitcode,
+        }
       end
     end
   end

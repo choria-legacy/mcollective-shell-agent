@@ -23,6 +23,13 @@ action "run", :description => "Run a command" do
             :maxlength   => 1024,
             :optional    => true
 
+    input   :timeout,
+            :prompt      => "Timeout",
+            :description => "Timeout to wait for the command to complete",
+            :type        => :float,
+            :optional    => true
+            # TODO(richardc): validate positive.  May need another validator class
+
     output  :stdout,
             :description => "stdout from the command",
             :display_as  => "stdout"
@@ -30,6 +37,10 @@ action "run", :description => "Run a command" do
     output  :stderr,
             :description => "stderr from the command",
             :display_as  => "stderr"
+
+    output  :success,
+            :description  => "did the process exit successfully",
+            :display_as   => "success"
 
     output  :exitcode,
             :description => "exit code of the command",
