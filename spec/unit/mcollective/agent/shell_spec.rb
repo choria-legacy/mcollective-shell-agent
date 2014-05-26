@@ -19,51 +19,57 @@ module MCollective
       end
 
       describe '#run_command' do
+        let(:reply) { {} }
+
+        before :each do
+          agent.stubs(:reply).returns(reply)
+        end
+
         it 'should run cleanly' do
-          result = agent.send(:run_command, :command => 'echo foo')
-          result[:exitcode].should == 0
-          result[:stdout].should == "foo\n"
+          agent.send(:run_command, :command => 'echo foo')
+          reply[:exitcode].should == 0
+          reply[:stdout].should == "foo\n"
         end
 
         it 'should cope with large amounts of output' do
-          result = agent.send(:run_command, :command => %{ruby -e '8000.times { puts "flirble wirble" }'})
-          result[:success].should == true
-          result[:exitcode].should == 0
-          result[:stdout].should == "flirble wirble\n" * 8000
+          agent.send(:run_command, :command => %{ruby -e '8000.times { puts "flirble wirble" }'})
+          reply[:success].should == true
+          reply[:exitcode].should == 0
+          reply[:stdout].should == "flirble wirble\n" * 8000
         end
 
         it 'should cope with large amounts of output on both channels' do
-          result = agent.send(:run_command, :command => %{ruby -e '8000.times { STDOUT.puts "flirble wirble"; STDERR.puts "flooble booble" }'})
-          result[:success].should == true
-          result[:exitcode].should == 0
-          result[:stdout].should == "flirble wirble\n" * 8000
-          result[:stderr].should == "flooble booble\n" * 8000
+          agent.send(:run_command, :command => %{ruby -e '8000.times { STDOUT.puts "flirble wirble"; STDERR.puts "flooble booble" }'})
+          reply[:success].should == true
+          reply[:exitcode].should == 0
+          reply[:stdout].should == "flirble wirble\n" * 8000
+          reply[:stderr].should == "flooble booble\n" * 8000
         end
 
         context 'timeout' do
           it 'should not timeout commands that exit quickly enough' do
-            result = agent.send(:run_command, {
+            agent.send(:run_command, {
               :command => %{ruby -e 'puts "started"; sleep 1; puts "finished"'},
               :timeout => 2.0,
             })
-            result[:success].should == true
-            result[:exitcode].should == 0
-            result[:stdout].should == "started\nfinished\n"
-            result[:stderr].should == ''
+            reply[:success].should == true
+            reply[:exitcode].should == 0
+            reply[:stdout].should == "started\nfinished\n"
+            reply[:stderr].should == ''
           end
 
           it 'should timeout long running commands' do
             start = Time.now()
-            result = agent.send(:run_command, {
+            agent.send(:run_command, {
               :command => %{ruby -e 'STDOUT.sync = true; puts "started"; sleep 2; puts "finished"'},
               :timeout => 1.0,
             })
             elapsed = Time.now() - start
             elapsed.should <= 1.5
-            result[:success].should == false
-            result[:exitcode].should == nil
-            result[:stdout].should == "started\n"
-            result[:stderr].should == ''
+            reply[:success].should == false
+            reply[:exitcode].should == nil
+            reply[:stdout].should == "started\n"
+            reply[:stderr].should == ''
           end
         end
       end
