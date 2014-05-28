@@ -74,9 +74,21 @@ action "status", :description => "Get status of managed command" do
             :prompt      => "Handle",
             :description => "Handle of the command",
             :type        => :string,
-            :validation  => '^[0-9a-z]*$',
-            :maxlength   => 15,
+            :validation  => '^[0-9a-z\-]*$',
+            :maxlength   => 36,
             :optional    => false
+
+    input   :stdout_offset,
+            :prompt      => "stdout_offset",
+            :description => "stdout_offset",
+            :type        => :integer,
+            :optional    => true
+
+    input   :stderr_offset,
+            :prompt      => "stderr_offset",
+            :description => "stderr_offset",
+            :type        => :integer,
+            :optional    => true
 
     # Running, Exited
     output :status,
@@ -112,7 +124,7 @@ action "kill", :description => "Kill a command by handle" do
             :prompt      => "Handle",
             :description => "Handle of the command",
             :type        => :string,
-            :validation  => '^[0-9a-z]*$',
-            :maxlength   => 15,
+            :validation  => '^[0-9a-z\-]*$',
+            :maxlength   => 36,
             :optional    => false
 end

@@ -86,22 +86,29 @@ module MCollective
       end
 
       action 'status' do
+        handle = request[:handle]
+        process = @@jobs[handle]
+        stdout_offset = request[:stdout_offset] || 0
+        stderr_offset = request[:stderr_offset] || 0
+
+        reply[:status] = process.status
+        reply[:stdout] = process.stdout.byteslice(stdout_offset..-1)
+        reply[:stderr] = process.stderr.byteslice(stderr_offset..-1)
+        if process.status == :stopped
+          reply[:exitcode] = process.exitcode
+          @@jobs.delete(handle)
+        end
       end
 
       action 'kill' do
+        handle = request[:handle]
+        job = @@jobs[handle]
+
+        job.kill
       end
 
       action 'list' do
-        list = {}
-        @@jobs.each do |id,job|
-          list[id] = {
-            :id      => id,
-            :command => job.command,
-            :status  => job.status,
-          }
-        end
-
-        reply[:jobs] = list
+        list
       end
 
       private
@@ -130,6 +137,18 @@ module MCollective
         reply[:handle] = id
       end
 
+      def list
+        list = {}
+        @@jobs.each do |id,job|
+          list[id] = {
+            :id      => id,
+            :command => job.command,
+            :status  => job.status,
+          }
+        end
+
+        reply[:jobs] = list
+      end
     end
   end
 end
