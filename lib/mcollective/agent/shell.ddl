@@ -1,12 +1,14 @@
 metadata    :name        => "shell",
             :description => "Run commands with the local shell",
-            :author      => "Richard Clamp",
+            :author      => "Puppet Labs",
             :license     => "ASL 2.0",
             :version     => "0.0.1",
             :url         => "https://github.com/puppetlabs/mcollective-shell-agent",
             :timeout     => 180
 
 action "run", :description => "Run a command" do
+    display :always
+
     input   :command,
             :prompt      => "Command",
             :description => "Command to run",
@@ -48,6 +50,8 @@ action "run", :description => "Run a command" do
 end
 
 action "start", :description => "Spawn a command" do
+    display :always
+
     input   :command,
             :prompt      => "Command",
             :description => "Command to run",
@@ -70,6 +74,8 @@ action "start", :description => "Spawn a command" do
 end
 
 action "status", :description => "Get status of managed command" do
+    display :always
+
     input   :handle,
             :prompt      => "Handle",
             :description => "Handle of the command",
@@ -113,6 +119,8 @@ action "status", :description => "Get status of managed command" do
 end
 
 action "list", :description => "Get a list of all running commands" do
+    display :always
+
     output   :jobs,
         :description => "state of managed jobs",
         :display_as  => "jobs"
@@ -120,6 +128,8 @@ action "list", :description => "Get a list of all running commands" do
 end
 
 action "kill", :description => "Kill a command by handle" do
+    display :always
+
     input   :handle,
             :prompt      => "Handle",
             :description => "Handle of the command",

@@ -16,8 +16,7 @@ END_OF_USAGE
 
   private
 
-  class TailState
-
+  class Watcher
     attr_reader :node, :handle
     attr_reader :stdout_offset, :stderr_offset
 
@@ -75,6 +74,22 @@ END_OF_USAGE
     end
   end
 
+  def start_command
+    command = ARGV.join(' ')
+    client = rpcclient('shell')
+
+    responses = client.start(:command => command)
+
+    responses.sort { |a,b| a[:sender] <=> b[:sender] }.each do |response|
+      if response[:statuscode] == 0
+        puts "#{response[:sender]}: #{response[:data][:handle]}"
+      else
+        puts "#{response[:sender]}: ERROR: #{response.inspect}"
+      end
+    end
+    printrpcstats :summarize => true, :caption => "Started command: #{command}"
+  end
+
   def tail_command
     command = ARGV.join(' ')
     client = rpcclient('shell')
@@ -82,7 +97,7 @@ END_OF_USAGE
     processes = []
     client.start(:command => command).each do |response|
       next unless response[:statuscode] == 0
-      processes << TailState.new(response)
+      processes << Watcher.new(response)
     end
 
     client.progress = false

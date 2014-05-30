@@ -82,7 +82,7 @@ module MCollective
       end
 
       action 'start' do
-        spawn_command(request.data)
+        start_command(request.data)
       end
 
       action 'status' do
@@ -131,7 +131,7 @@ module MCollective
         reply[:exitcode] = process.exitcode
       end
 
-      def spawn_command(request = {})
+      def start_command(request = {})
         id = SecureRandom.uuid
         @@jobs[id] = Job.new(request[:command])
         reply[:handle] = id
