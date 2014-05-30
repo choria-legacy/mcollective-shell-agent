@@ -82,8 +82,9 @@ END_OF_USAGE
     client = rpcclient('shell')
 
     responses = client.start(:command => command)
+    responses.sort_by! { |r| r[:sender] }
 
-    responses.sort { |a,b| a[:sender] <=> b[:sender] }.each do |response|
+    responses.each do |response|
       if response[:statuscode] == 0
         puts "#{response[:sender]}: #{response[:data][:handle]}"
       else
@@ -125,7 +126,6 @@ END_OF_USAGE
     watchers = []
     client.list.each do |response|
       next if response[:statuscode] != 0
-      puts response.inspect
       response[:data][:jobs].keys.each do |handle|
         if handles.include?(handle)
           watchers << Watcher.new(response[:sender], handle)
@@ -175,7 +175,6 @@ END_OF_USAGE
 
     while !processes.empty?
       processes.each do |process|
-        #puts process.inspect
         client.filter["identity"].clear
         client.identity_filter process.node
 
@@ -189,8 +188,6 @@ END_OF_USAGE
           :stdout_offset => process.stdout_offset,
           :stderr_offset => process.stderr_offset,
         }).each do |response|
-          #puts response.inspect
-
           if response[:statuscode] != 0
             process.flush
             processes.delete(process)
