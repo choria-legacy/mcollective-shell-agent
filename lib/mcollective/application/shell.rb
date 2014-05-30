@@ -7,6 +7,8 @@ mco shell [OPTIONS] [FILTERS] <ACTION> [ARGS]
   mco shell start [COMMAND]
   mco shell watch [HANDLE]
   mco shell tail [COMMAND]
+  mco shell list
+  mco shell kill [HANDLE]
 END_OF_USAGE
 
   def post_option_parser(configuration)
@@ -147,6 +149,15 @@ END_OF_USAGE
     end
 
     watch_these(client, processes, true)
+  end
+
+  def kill_command
+    handle = ARGV.shift
+    client = rpcclient('shell')
+
+    client.kill(:handle => handle)
+
+    printrpcstats :summarize => true, :caption => "Command list"
   end
 
   def watch_these(client, processes, kill_on_interrupt = false)
