@@ -93,6 +93,31 @@ END_OF_USAGE
     printrpcstats :summarize => true, :caption => "Started command: #{command}"
   end
 
+  def list_command
+    client = rpcclient('shell')
+
+    responses = client.list
+    responses.sort_by! { |r| r[:sender] }
+
+    responses.each do |response|
+      if response[:statuscode] == 0
+        next if response[:data][:jobs].empty?
+        puts "#{response[:sender]}:"
+        response[:data][:jobs].keys.sort.each do |handle|
+          puts "    #{handle}"
+
+          if client.verbose
+            puts "        command: #{response[:data][:jobs][handle][:command]}"
+            puts "        status:  #{response[:data][:jobs][handle][:status]}"
+            puts ""
+          end
+        end
+      end
+    end
+
+    printrpcstats :summarize => true, :caption => "Command list"
+  end
+
   def watch_command
     handles = ARGV
     client = rpcclient('shell')
