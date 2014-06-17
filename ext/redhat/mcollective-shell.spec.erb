@@ -1,0 +1,68 @@
+# VERSION is subbed out during rake srpm process
+%global realversion <%= @version %>
+%global rpmversion <%= @rpmversion %>
+
+Summary:   Run commands with the local shell
+Name:      mcollective-shell
+Version:   %{rpmversion}
+Release:   <%= @rpmrelease -%>%{?dist}
+Vendor:    %{?_host_vendor}
+License:   ASL 2.0
+URL:       https://github.com/puppetlabs/mcollective-shell-agent
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildArch: noarch
+Group:     System Tools
+Source0:   mcollective-shell-%{realversion}.tar.gz
+
+%description
+Run commands with the local shell
+
+%prep
+%setup -q  -n %{name}-%{realversion}
+
+%build
+
+%install
+rm -rf %{buildroot}
+%{__install} -d -m0755 %{buildroot}%{_libexecdir}/mcollective/mcollective
+cp -a lib/mcollective/agent lib/mcollective/application %{buildroot}%{_libexecdir}/mcollective/mcollective
+
+%clean
+rm -rf %{buildroot}
+
+%package agent
+Requires: mcollective-shell-common = %{version}-%{release}
+Group: System Tools
+Summary:   Run commands with the local shell
+
+%package client
+Requires: mcollective-shell-common = %{version}-%{release}
+Group: System Tools
+Summary:   Run commands with the local shell
+
+%package common
+Requires: mcollective-common >= 2.2.1
+Group: System Tools
+Summary:   Run commands with the local shell
+
+%description agent
+Run commands with the local shell
+
+%description client
+Run commands with the local shell
+
+%description common
+Run commands with the local shell
+
+%files agent
+%{_libexecdir}/mcollective/mcollective/agent/*.rb
+
+%files client
+%{_libexecdir}/mcollective/mcollective/application/*.rb
+
+%files common
+%{_libexecdir}/mcollective/mcollective/agent/*.ddl
+
+%changelog
+* <%= Time.now.strftime("%a %b %d %Y") %> Puppet Labs Release <info@puppetlabs.com> -  <%= @rpmversion %>-<%= @rpmrelease %>
+- Build for <%= @version %>

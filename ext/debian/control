@@ -1,0 +1,22 @@
+Source: mcollective-shell
+Homepage: https://github.com/puppetlabs/mcollective-shell-agent
+Section: utils
+Priority: extra
+Maintainer: Puppet Labs
+Build-Depends: cdbs, debhelper
+Standards-Version: 3.8.0
+
+Package: mcollective-shell-agent
+Architecture: all
+Depends: mcollective-shell-common(= ${binary:Version})
+Description: Run commands with the local shell
+
+Package: mcollective-shell-client
+Architecture: all
+Depends: mcollective-shell-common(= ${binary:Version})
+Description: Run commands with the local shell
+
+Package: mcollective-shell-common
+Architecture: all
+Depends: mcollective-common(>= 2.2.1)
+Description: Run commands with the local shell

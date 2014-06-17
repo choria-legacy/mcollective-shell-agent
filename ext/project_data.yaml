@@ -1,0 +1,14 @@
+---
+project: 'mcollective-shell'
+author: 'Puppet Labs'
+email: 'info@puppetlabs.com'
+homepage: 'https://github.com/puppetlabs/mcollective-shell-agent'
+summary: 'Run commands with the local shell'
+description: 'Run commands with the local shell'
+# files and gem_files are space separated lists
+files:
+  - lib
+# List of packaging related templates to evaluate before the tarball is packed
+templates:
+  - "ext/redhat/mcollective-shell.spec.erb"
+  - "ext/debian/changelog.erb"
