@@ -23,6 +23,12 @@ module MCollective
 
         before :each do
           agent.stubs(:reply).returns(reply)
+          @tmpdir = Dir.mktmpdir
+          Shell::Job.stubs(:state_path).returns(@tmpdir)
+        end
+
+        after :each do
+          FileUtils.remove_entry_secure @tmpdir
         end
 
         it 'should run cleanly' do
@@ -46,6 +52,12 @@ module MCollective
           reply[:stderr].should == "flooble booble\n" * 8000
         end
 
+        it 'raise on a non-existent command' do
+          expect {
+            agent.send(:run_command, :command => 'i_really_should_not_exist')
+          }.to raise_error(/No such file or directory - i_really_should_not_exist/)
+        end
+
         context 'timeout' do
           it 'should not timeout commands that exit quickly enough' do
             agent.send(:run_command, {
@@ -61,11 +73,11 @@ module MCollective
           it 'should timeout long running commands' do
             start = Time.now()
             agent.send(:run_command, {
-              :command => %{ruby -e 'STDOUT.sync = true; puts "started"; sleep 2; puts "finished"'},
+              :command => %{ruby -e 'STDOUT.sync = true; puts "started"; sleep 5; puts "finished"'},
               :timeout => 1.0,
             })
             elapsed = Time.now() - start
-            elapsed.should <= 1.5
+            elapsed.should <= 2
             reply[:success].should == false
             reply[:exitcode].should == nil
             reply[:stdout].should == "started\n"

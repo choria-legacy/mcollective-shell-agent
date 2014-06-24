@@ -4,78 +4,222 @@ module MCollective
   module Agent
     class Shell<RPC::Agent
       class Job
-        attr_reader :command
-        attr_reader :stdout, :stderr
-        attr_reader :io_thread
-        def initialize(command)
-          @command = command
-          @stdout = ''
-          @stderr = ''
-          @stdout_rd, stdout_wr = IO.pipe
-          @stderr_rd, stderr_wr = IO.pipe
-          options = {
-            :chdir => "/",
-            :out => stdout_wr,
-            :err => stderr_wr,
-          }
+        @@ruby = nil
 
-          @pid = Process.spawn(command, options)
-          stdout_wr.close
-          stderr_wr.close
-          @io_thread = Thread.new { io_loop }
+        # get all the jobs with state
+        def self.list
+          jobs = []
+          Dir.entries(state_path).each do |handle|
+            next if handle[0] == '.'
+            jobs << Job.new(handle)
+          end
+          return jobs
         end
 
-        def io_loop
-          rd_fds = [ @stdout_rd, @stderr_rd ]
-          while !rd_fds.empty?
-            rds, = IO.select(rd_fds)
-            rds.each do |readable|
-              case readable
-              when @stdout_rd
-                begin
-                  @stdout += @stdout_rd.readpartial(1024)
-                rescue EOFError
-                  rd_fds.delete(@stdout_rd)
-                end
-              when @stderr_rd
-                begin
-                  @stderr += @stderr_rd.readpartial(1024)
-                rescue EOFError
-                  rd_fds.delete(@stderr_rd)
-                end
-              else
-                Log.error("Unexpected fd #{readable.inspect}")
-              end
+        attr_reader :command, :handle, :exitcode, :signal, :pid
+        def initialize(handle = nil)
+          if !handle
+            @handle = SecureRandom.uuid
+            Pathname.new(state_directory).mkpath
+          else
+            @handle = handle
+
+            commandfile = "#{state_directory}/command"
+            if File.exists?(commandfile)
+              @command = IO.read(commandfile).chomp
             end
+
+            pidfile = "#{state_directory}/pid"
+            if File.exists?(pidfile)
+              @pid = Integer(IO.read(pidfile))
+            end
+
+            get_exitcode
           end
+        end
+
+        def start_command(command)
+          @command = command
+          # We create a manager process which then spawns the command we want
+          # to run, the manager then writes a 'pid' file on succesful spawn, or
+          # an 'error' file.  Assuming success it waits for completion of the
+          # process and records the exit status to the 'exitstatus' file.
+          File.open("#{state_directory}/command", 'w') do |fh|
+            fh.puts command
+          end
+
+          File.open("#{state_directory}/wrapper", 'w') do |fh|
+            fh.puts wrapper
+          end
+
+          manager = ::Process.spawn(find_ruby, "#{state_directory}/wrapper", {
+            :chdir => '/',
+            :in => :close,
+            :out => :close,
+            :err => :close,
+          })
+
+          Log.error("have spawned mananger #{manager.inspect}")
+
+          if manager == nil
+            raise "Couldn't spawn manager process"
+          end
+
+          # busy wait for a pid or error file
+          while !File.exists?("#{state_directory}/pid") && !File.exists?("#{state_directory}/error")
+            sleep 0.1
+          end
+
+          ::Process.detach(manager)
+
+          if File.exists?("#{state_directory}/pid")
+            @pid = Integer(IO.read("#{state_directory}/pid"))
+          else
+            # we must have an error file
+            raise IO.read("#{state_directory}/error")
+          end
+        end
+
+        def stdout(offset = 0)
+          fh = File.new("#{state_directory}/stdout", 'rb')
+          fh.seek(offset, IO::SEEK_SET)
+          out = fh.read
+          fh.close
+          return out
+        end
+
+        def stderr(offset = 0)
+          fh = File.new("#{state_directory}/stderr", 'rb')
+          fh.seek(offset, IO::SEEK_SET)
+          err = fh.read
+          fh.close
+          return err
         end
 
         def status
-          if io_thread.alive?
-            return :running
-          else
+          if File.exists?("#{state_directory}/error")
+            # Process failed to start
+            return :failed
+          end
+
+          if !File.exists?("#{state_directory}/pid")
+            # We haven't started yet
+            return :starting
+          end
+
+          if File.exists?("#{state_directory}/exitstatus")
+            # The manager has written out the exitstatus, so the process is done
             return :stopped
           end
+
+          return :running
         end
 
         def kill
-          io_thread.kill
-          ::Process.kill('TERM', @pid)
+          ::Process.kill('TERM', pid)
         end
 
-        def exitcode
-          Process.waitpid(@pid)
+        def wait_for_process
+          while status == :running
+            sleep 0.1
+          end
+          get_exitcode
+        end
 
+        def cleanup_state
+          FileUtils.remove_entry_secure state_directory
+        end
+
+        private
+
+        def self.state_path
           if Util.windows?
-            # On win32 $? doesn't seem to get set - probably need to call GetExitCode
-            exitcode = 0
+            default = "C:/ProgramData/mcollective-shell"
           else
-            exitcode = $?.exitstatus
+            default = "/var/run/mcollective-shell"
+          end
+
+          Config.instance.pluginconf['shell.state_path'] || default
+        end
+
+        def get_exitcode
+          statusfile = "#{state_directory}/exitstatus"
+          if File.exists?(statusfile)
+            status = Integer(IO.read(statusfile))
+            @signal = status & 0xff
+            @exitcode = status >> 8
           end
         end
-      end
 
-      @@jobs = {}
+        def find_ruby
+          if @@ruby
+            return @@ruby
+          end
+
+          ruby_config = begin
+            ::RbConfig::CONFIG
+          rescue NameError
+            ::Config::CONFIG
+          end
+
+          candidates = [
+            File.join(ruby_config['bindir'], ruby_config['ruby_install_name']) + ruby_config['EXEEXT'],
+            'ruby',
+          ]
+
+          found = candidates.find { |path| system('%s -e 42' % path) }
+
+          if found
+            @@ruby = found
+            return @@ruby
+          else
+            raise "No ruby found via Config or PATH"
+          end
+        end
+
+        def wrapper
+          return <<-WRAPPER
+            command = IO.read("#{state_directory}/command").chomp
+
+            options = {
+              :chdir => '/',
+              :out => "#{state_directory}/stdout",
+              :err => "#{state_directory}/stderr",
+            }
+
+            begin
+              pid = ::Process.spawn(command, options)
+
+              File.open("#{state_directory}/pid", 'w') do |fh|
+                fh.puts pid
+              end
+
+              ::Process.waitpid(pid)
+
+              if $?.nil?
+                # On win32 $? doesn't seem to get set - probably need to grab a
+                # handle then call GetExitCode
+                exitstatus = 0
+              else
+                exitstatus = $?.to_i
+              end
+
+              File.open("#{state_directory}/exitstatus", 'w') do |fh|
+                fh.puts exitstatus
+              end
+
+            rescue Exception => e
+              File.open("#{state_directory}/error", 'w') do |fh|
+                fh.puts e
+              end
+            end
+          WRAPPER
+        end
+
+        def state_directory
+          "#{self.class.state_path}/#{@handle}"
+        end
+      end
 
       action 'run' do
         run_command(request.data)
@@ -87,22 +231,21 @@ module MCollective
 
       action 'status' do
         handle = request[:handle]
-        process = @@jobs[handle]
+        process = Job.new(handle)
         stdout_offset = request[:stdout_offset] || 0
         stderr_offset = request[:stderr_offset] || 0
 
         reply[:status] = process.status
-        reply[:stdout] = process.stdout.byteslice(stdout_offset..-1)
-        reply[:stderr] = process.stderr.byteslice(stderr_offset..-1)
+        reply[:stdout] = process.stdout(stdout_offset)
+        reply[:stderr] = process.stderr(stderr_offset)
         if process.status == :stopped
           reply[:exitcode] = process.exitcode
-          @@jobs.delete(handle)
         end
       end
 
       action 'kill' do
         handle = request[:handle]
-        job = @@jobs[handle]
+        job = Job.new(handle)
 
         job.kill
       end
@@ -114,12 +257,13 @@ module MCollective
       private
 
       def run_command(request = {})
-        process = Job.new(request[:command])
+        process = Job.new
+        process.start_command(request[:command])
         timeout = request[:timeout] || 0
         reply[:success] = true
         begin
           Timeout::timeout(timeout) do
-            process.io_thread.join
+            process.wait_for_process
           end
         rescue Timeout::Error
           reply[:success] = false
@@ -129,21 +273,23 @@ module MCollective
         reply[:stdout] = process.stdout
         reply[:stderr] = process.stderr
         reply[:exitcode] = process.exitcode
+        process.cleanup_state
       end
 
       def start_command(request = {})
-        id = SecureRandom.uuid
-        @@jobs[id] = Job.new(request[:command])
-        reply[:handle] = id
+        job = Job.new
+        job.start_command(request[:command])
+        reply[:handle] = job.handle
       end
 
       def list
         list = {}
-        @@jobs.each do |id,job|
-          list[id] = {
-            :id      => id,
+        Job.list.each do |job|
+          list[job.handle] = {
+            :id      => job.handle,
             :command => job.command,
             :status  => job.status,
+            :signal  => job.signal,
           }
         end
 
