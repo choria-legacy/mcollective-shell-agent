@@ -1,5 +1,7 @@
+require 'mcollective/application/shell/watcher'
+
 class MCollective::Application::Shell < MCollective::Application
-  description 'Run shell commands innit'
+  description 'Run shell commands'
 
   usage <<-END_OF_USAGE
 mco shell [OPTIONS] [FILTERS] <ACTION> [ARGS]
@@ -12,72 +14,16 @@ mco shell [OPTIONS] [FILTERS] <ACTION> [ARGS]
 END_OF_USAGE
 
   def post_option_parser(configuration)
+    # TODO(richardc): cope with no command
     configuration[:command] = ARGV.shift
   end
 
   def main
+    # TODO(richardc): cope with bad command
     send("#{configuration[:command]}_command")
   end
 
   private
-
-  class Watcher
-    attr_reader :node, :handle
-    attr_reader :stdout_offset, :stderr_offset
-
-    def initialize(node, handle)
-      @node = node
-      @handle = handle
-      @stdout = PrefixStreamBuf.new("#{node} stdout: ")
-      @stderr = PrefixStreamBuf.new("#{node} stderr: ")
-      @stdout_offset = 0
-      @stderr_offset = 0
-    end
-
-    def status(response)
-      @stdout_offset += response[:data][:stdout].size
-      @stdout.display(response[:data][:stdout])
-      @stderr_offset += response[:data][:stderr].size
-      @stderr.display(response[:data][:stderr])
-    end
-
-    def flush
-      @stdout.flush
-      @stderr.flush
-    end
-
-    private
-
-    class PrefixStreamBuf
-      def initialize(prefix)
-        @buffer = ''
-        @prefix = prefix
-      end
-
-      def display(data)
-        @buffer += data
-        chunks = @buffer.lines.to_a
-        return if chunks.empty?
-
-        if chunks[-1][-1] != "\n"
-          @buffer = chunks[-1]
-          chunks.pop
-        else
-          @buffer = ''
-        end
-
-        chunks.each do |chunk|
-          puts "#{@prefix}#{chunk}"
-        end
-      end
-
-      def flush
-        if @buffer.size > 0
-          display("\n")
-        end
-      end
-    end
-  end
 
   def start_command
     command = ARGV.join(' ')

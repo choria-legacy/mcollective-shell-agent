@@ -1,1 +1,2 @@
 lib/mcollective/application/*.rb usr/share/mcollective/plugins/mcollective/application/
+lib/mcollective/application/shell/*.rb usr/share/mcollective/plugins/mcollective/application/shell/

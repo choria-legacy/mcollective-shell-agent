@@ -56,9 +56,11 @@ Run commands with the local shell
 
 %files agent
 %{_libexecdir}/mcollective/mcollective/agent/*.rb
+%{_libexecdir}/mcollective/mcollective/agent/shell/*.rb
 
 %files client
 %{_libexecdir}/mcollective/mcollective/application/*.rb
+%{_libexecdir}/mcollective/mcollective/application/shell/*.rb
 
 %files common
 %{_libexecdir}/mcollective/mcollective/agent/*.ddl
