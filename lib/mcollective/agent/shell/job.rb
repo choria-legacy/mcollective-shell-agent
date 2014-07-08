@@ -1,5 +1,23 @@
 require 'securerandom'
 
+# The Job class manages the spawning and state tracking for a process as it's
+# running.
+#
+# The general approach we take is to create a directory per Job
+# (Job#state_directory), and populate it as follows:
+
+#   command    - the command we've been asked to run
+#   wrapper    - a short program that spawns the command and collects its exit
+#                status
+#   error      - any problem in spawning the process
+#   pid        - the pid of the spawned process
+#   stdout     - stdout from the process
+#   stderr     - stderr from the process
+#   exitstatus - the exitstatus of the spawned process
+
+# The wrapper process is detached from the mcollectived process, so restarting
+# the mcollectived will not terminate the process.
+
 module MCollective
   module Agent
     class Shell<RPC::Agent
