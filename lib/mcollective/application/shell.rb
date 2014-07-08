@@ -19,12 +19,21 @@ END_OF_USAGE
          :type        => :bool
 
   def post_option_parser(configuration)
-    # TODO(richardc): cope with no command
-    configuration[:command] = ARGV.shift
+    if ARGV.size < 1
+      raise "Please specify an action"
+    end
+
+    valid_actions = ['run', 'start', 'watch', 'list', 'kill' ]
+    action = ARGV.shift
+
+    unless valid_actions.include?(action)
+      raise 'Action has to be one of ' + valid_actions.join(', ')
+    end
+
+    configuration[:command] = action
   end
 
   def main
-    # TODO(richardc): cope with bad command
     send("#{configuration[:command]}_command")
   end
 
