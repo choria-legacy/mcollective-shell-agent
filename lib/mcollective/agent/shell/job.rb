@@ -59,8 +59,6 @@ module MCollective
             :err => :close,
           })
 
-          Log.error("have spawned mananger #{manager.inspect}")
-
           if manager == nil
             raise "Couldn't spawn manager process"
           end
