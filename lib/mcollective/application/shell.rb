@@ -113,7 +113,7 @@ END_OF_USAGE
     if kill_on_interrupt
       # trap sigint so we can send a kill to the commands we're watching
       trap('SIGINT') do
-        puts "Attempting to stopping cleanly, interrupt again to kill"
+        puts "Attempting to stop cleanly, interrupt again to kill"
         state = :stopping
 
         # if we're double-tapped, just quit (may leave a mess)
