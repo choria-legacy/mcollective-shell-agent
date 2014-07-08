@@ -1,10 +1,14 @@
 require 'mcollective/application/shell/prefix_stream_buf'
 
+# The Watcher class is a utility class for Application::Shell#watch_these.
+# It's effectively a tuple of [node, handle] to identify the command, and
+# PrefixStreamBufs and watermarks to track where in the stdout/stderr we have
+# seen.
+
 module MCollective
   class Application
     class Shell < Application
       class Watcher
-        # TODO(richardc): explain what this class is for
         attr_reader :node, :handle
         attr_reader :stdout_offset, :stderr_offset
 
