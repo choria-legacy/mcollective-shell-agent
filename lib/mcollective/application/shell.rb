@@ -6,13 +6,17 @@ class MCollective::Application::Shell < MCollective::Application
   usage <<-END_OF_USAGE
 mco shell [OPTIONS] [FILTERS] <ACTION> [ARGS]
 
-  mco shell run [COMMAND]
+  mco shell run [--tail] [COMMAND]
   mco shell start [COMMAND]
   mco shell watch [HANDLE]
-  mco shell tail [COMMAND]
   mco shell list
   mco shell kill [HANDLE]
 END_OF_USAGE
+
+  option :tail,
+         :arguments   => [ '--tail' ],
+         :description => 'Switch run to tail mode',
+         :type        => :bool
 
   def post_option_parser(configuration)
     # TODO(richardc): cope with no command
@@ -28,29 +32,12 @@ END_OF_USAGE
 
   def run_command
     command = ARGV.join(' ')
-    client = rpcclient('shell')
 
-    responses = client.run(:command => command)
-    responses.sort_by! { |r| r[:sender] }
-
-    responses.each do |response|
-      if response[:statuscode] == 0
-        puts "#{response[:sender]}:"
-        puts response[:data][:stdout]
-        if response[:data][:stderr].size > 0
-          puts "    STDERR:"
-          puts response[:data][:stderr]
-        end
-        if response[:data][:exitcode] != 0
-          puts "exitcode: #{response[:data][:exitcode]}"
-        end
-        puts ""
-      else
-        puts "#{response[:sender]}: ERROR: #{response.inspect}"
-      end
+    if configuration[:tail]
+      tail(command)
+    else
+      do_run(command)
     end
-
-    printrpcstats :summarize => true, :caption => "Ran command: #{command}"
   end
 
   def start_command
@@ -112,8 +99,42 @@ END_OF_USAGE
     watch_these(client, watchers)
   end
 
-  def tail_command
-    command = ARGV.join(' ')
+  def kill_command
+    handle = ARGV.shift
+    client = rpcclient('shell')
+
+    client.kill(:handle => handle)
+
+    printrpcstats :summarize => true, :caption => "Command list"
+  end
+
+  def do_run(command)
+    client = rpcclient('shell')
+
+    responses = client.run(:command => command)
+    responses.sort_by! { |r| r[:sender] }
+
+    responses.each do |response|
+      if response[:statuscode] == 0
+        puts "#{response[:sender]}:"
+        puts response[:data][:stdout]
+        if response[:data][:stderr].size > 0
+          puts "    STDERR:"
+          puts response[:data][:stderr]
+        end
+        if response[:data][:exitcode] != 0
+          puts "exitcode: #{response[:data][:exitcode]}"
+        end
+        puts ""
+      else
+        puts "#{response[:sender]}: ERROR: #{response.inspect}"
+      end
+    end
+
+    printrpcstats :summarize => true, :caption => "Ran command: #{command}"
+  end
+
+  def tail(command)
     client = rpcclient('shell')
 
     processes = []
@@ -123,15 +144,6 @@ END_OF_USAGE
     end
 
     watch_these(client, processes, true)
-  end
-
-  def kill_command
-    handle = ARGV.shift
-    client = rpcclient('shell')
-
-    client.kill(:handle => handle)
-
-    printrpcstats :summarize => true, :caption => "Command list"
   end
 
   def watch_these(client, processes, kill_on_interrupt = false)
