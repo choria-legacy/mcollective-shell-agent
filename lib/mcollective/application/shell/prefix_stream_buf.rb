@@ -1,8 +1,14 @@
+# PrefixStreamBuf is a utility class used my
+# MCollective::Application::Shell::Watcher.
+
+# PrefixStreambuf#display takes chunks of input, and on complete lines will
+# emit that line with the prefix.  Incomplete lines are kept internally for
+# the next call to display, unless #flush is called to flush the buffer.
+
 module MCollective
   class Application
     class Shell < Application
       class PrefixStreamBuf
-        # TODO(richardc): explain what this class is for
         def initialize(prefix)
           @buffer = ''
           @prefix = prefix
