@@ -6,6 +6,7 @@ class MCollective::Application::Shell < MCollective::Application
   usage <<-END_OF_USAGE
 mco shell [OPTIONS] [FILTERS] <ACTION> [ARGS]
 
+  mco shell run [COMMAND]
   mco shell start [COMMAND]
   mco shell watch [HANDLE]
   mco shell tail [COMMAND]
@@ -24,6 +25,33 @@ END_OF_USAGE
   end
 
   private
+
+  def run_command
+    command = ARGV.join(' ')
+    client = rpcclient('shell')
+
+    responses = client.run(:command => command)
+    responses.sort_by! { |r| r[:sender] }
+
+    responses.each do |response|
+      if response[:statuscode] == 0
+        puts "#{response[:sender]}:"
+        puts response[:data][:stdout]
+        if response[:data][:stderr].size > 0
+          puts "    STDERR:"
+          puts response[:data][:stderr]
+        end
+        if response[:data][:exitcode] != 0
+          puts "exitcode: #{response[:data][:exitcode]}"
+        end
+        puts ""
+      else
+        puts "#{response[:sender]}: ERROR: #{response.inspect}"
+      end
+    end
+
+    printrpcstats :summarize => true, :caption => "Ran command: #{command}"
+  end
 
   def start_command
     command = ARGV.join(' ')

@@ -13,6 +13,42 @@ the code from lib and adding it to your MCollective $libdir
 
 ## Usage
 
+### mco shell run
+
+Runs a command and reports back.  For long-running commands look at start or
+tail.
+
+```
+$ mco shell run dir
+
+ * [ ============================================================> ] 2 / 2
+
+master:
+bin   dev  home  lib64       media  opt   root  selinux  srv  tmp  vagrant
+boot  etc  lib   lost+found  mnt    proc  sbin  src      sys  usr  var
+
+server2008r2a:
+ Volume in drive C has no label.
+ Volume Serial Number is DADF-75F9
+
+ Directory of C:\
+
+09/22/2012  11:45 AM    <SYMLINKD>     manifests [\\vboxsrv\manifests]
+09/22/2012  11:45 AM    <SYMLINKD>     modules [\\vboxsrv\modules]
+07/13/2009  08:20 PM    <DIR>          PerfLogs
+09/22/2012  11:42 AM    <DIR>          Program Files
+03/27/2014  06:52 AM    <DIR>          Program Files (x86)
+07/03/2014  07:42 AM    <SYMLINKD>     src [\\vboxsrv\C:_src]
+03/27/2014  06:39 AM    <DIR>          Users
+07/03/2014  07:42 AM    <SYMLINKD>     vagrant [\\vboxsrv\vagrant]
+03/27/2014  06:41 AM    <DIR>          Windows
+               0 File(s)              0 bytes
+               9 Dir(s)  34,565,091,328 bytes free
+
+
+Finished processing 2 / 2 hosts in 221.28 ms
+```
+
 ### mco shell start
 
 Starts a command.
