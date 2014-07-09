@@ -1,5 +1,7 @@
 # Shell agent
 
+[![Build Status](https://travis-ci.org/puppetlabs/mcollective-shell-agent.svg?branch=master)](https://travis-ci.org/puppetlabs/mcollective-shell-agent)
+
 The shell agent allows you to start and manage shell commands via
 mcollective.
 
