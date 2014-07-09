@@ -58,6 +58,9 @@ module MCollective
             IO.expects(:read).with("#{state_directory}/pid").returns("54\n")
             job.start_command('echo foo')
             job.pid.should == 54
+
+            # explicitly unstub so the after block can fire
+            File.unstub(:open)
           end
         end
 
