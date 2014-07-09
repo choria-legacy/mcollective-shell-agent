@@ -3,6 +3,26 @@
 The shell agent allows you to start and manage shell commands via
 mcollective.
 
+It allows the running of long-running processes with a mechanism to check in
+on the output from these long-running processes, which is independent of the
+mcollective daemon process (the daemon can be restarted without interrupting
+the processes)
+
+To use this agent you need at least:
+
+* MCollective 2.2.4
+* Ruby 1.9 (for Process#spawn)
+
+Please report any errors or make feature requests in the [MCOP jira project][MCOP]
+
+Please note: we do not recommend this agent as a way of building out your
+automation, for that you're still better off writing your own tailored
+[agents][writing-agents] that fit your use case.  This agent is targeted
+at the ad-hoc needs that people ocassionaly have.
+
+[writing-agents]: http://docs.puppetlabs.com/mcollective/simplerpc/agents.html
+[MCOP]: http://tickets.puppetlabs.com/browse/MCOP
+
 ## Installation
 
 Follow the [basic plugin install guide][install guide], taking all
@@ -11,12 +31,31 @@ the code from lib and adding it to your MCollective $libdir
 [install guide]: http://projects.puppetlabs.com/projects/mcollective-plugins/wiki/InstalingPlugins
 
 
-## Usage
+## Configuring the agent
+
+The agent should work without any additional configuration, though there are
+some options you can tune the mcollective server.cfg.
+
+### `plugin.shell.state_directory`
+
+This is where the state used to track processes will live.  By default this
+will be /var/run/mcollective-shell on Unix systems.
+
+```
+plugin.shell.state_directory = /opt/run/mcollective-shell
+```
+
+
+## Application usage
+
+The `mco shell` application has several subcommands to start and manage
+processes.
 
 ### mco shell run
 
-Runs a command and reports back.  For long-running commands look at start or
-tail.
+Runs a command and reports back.  Use this for discrete short-living commands.
+
+For long-running commands look at `start` or `run --tail`.
 
 ```
 $ mco shell run dir
@@ -75,7 +114,9 @@ Sending kill to master 6dad5cb9-57f7-46e0-bad7-07ab117369a5
 
 ### mco shell start
 
-Starts a command.
+Starts a command in the background and tells you the id that has been assigned
+to it.  You can then use `mco shell watch`, `mco shell kill`, `mco shell list`
+to monitor this process and observe its output
 
 ```
 $ mco shell -I /master/ start vmstat 1
@@ -104,7 +145,7 @@ master stdout:  2  0 431448 110704   8484  40644   34   29    52    48   40   47
 
 ### mco shell list
 
-Show a list of running jobs
+Show a list of running jobs.
 
 ```
 $ mco shell list -v
@@ -122,7 +163,7 @@ Finished processing 2 / 2 hosts in 142.34 ms
 
 ### mco shell kill
 
-Kill a running job
+Kill a running job.
 
 ```
 $ mco shell kill 0dd67fac-734f-4824-8b4d-03100d4f9d07
@@ -132,5 +173,3 @@ $ mco shell kill 0dd67fac-734f-4824-8b4d-03100d4f9d07
 
 Finished processing 2 / 2 hosts in 170.17 ms
 ```
-
-
