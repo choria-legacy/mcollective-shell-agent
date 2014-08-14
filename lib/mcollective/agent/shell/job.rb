@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'pathname'
 
 # The Job class manages the spawning and state tracking for a process as it's
 # running.
