@@ -175,3 +175,24 @@ $ mco shell kill 0dd67fac-734f-4824-8b4d-03100d4f9d07
 
 Finished processing 2 / 2 hosts in 170.17 ms
 ```
+
+### mco rpc
+
+```
+$ mco rpc shell start command="touch hello_mco_shell_agent"
+Discovering hosts using the mc method for 2 second(s) .... 1
+
+ * [ ===========================================================> ] 1 / 1
+
+
+vm-one.domain
+   handle: c56e3756-e9ed-4479-8406-248ed4e10557
+
+
+
+Finished processing 1 / 1 hosts in 672.04 ms
+
+$ ls
+bin   dev  hello_mco_shell_agent  lib    media  opt   root  sbin  sys  usr
+boot  etc  home                   lib64  mnt    proc  run   srv   tmp  var
+```
