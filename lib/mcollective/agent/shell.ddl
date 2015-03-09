@@ -2,7 +2,7 @@ metadata    :name        => "shell",
             :description => "Run commands with the local shell",
             :author      => "Puppet Labs",
             :license     => "ASL 2.0",
-            :version     => "0.0.1",
+            :version     => "0.0.2",
             :url         => "https://github.com/puppetlabs/mcollective-shell-agent",
             :timeout     => 180
 
