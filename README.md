@@ -20,7 +20,7 @@ Please report any errors or make feature requests in the [MCOP jira project][MCO
 Please note: we do not recommend this agent as a way of building out your
 automation, for that you're still better off writing your own tailored
 [agents][writing-agents] that fit your use case.  This agent is targeted
-at the ad-hoc needs that people ocassionaly have.
+at the ad-hoc needs that people occasionally have.
 
 [writing-agents]: http://docs.puppetlabs.com/mcollective/simplerpc/agents.html
 [MCOP]: http://tickets.puppetlabs.com/browse/MCOP
