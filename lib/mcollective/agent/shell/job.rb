@@ -184,7 +184,7 @@ module MCollective
             'ruby',
           ]
 
-          found = candidates.find { |path| system('%s -e 42' % path) }
+          found = candidates.find { |path| system('"%s" -e 42' % path) }
 
           if found
             @@ruby = found
