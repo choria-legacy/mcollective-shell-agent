@@ -19,7 +19,7 @@ module MCollective
           chunks = @buffer.lines.to_a
           return if chunks.empty?
 
-          if chunks[-1][-1] != "\n"
+          if chunks[-1][-1] != "\n"[0]
             @buffer = chunks[-1]
             chunks.pop
           else

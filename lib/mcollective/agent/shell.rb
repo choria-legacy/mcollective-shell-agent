@@ -56,6 +56,11 @@ module MCollective
         reply[:stderr] = process.stderr
         reply[:exitcode] = process.exitcode
         process.cleanup_state
+        # This is only needed to emulate the behaviour of Process.spawn
+        # with POSIX::Spawn.spawn if the command was not found.
+        if reply[:exitcode] == 127
+          raise "No such file or directory - #{request[:command].scan(/\S+/)[0]}"
+        end
       end
 
       def start_command(request = {})

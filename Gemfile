@@ -1,6 +1,11 @@
 #!ruby
 source 'https://rubygems.org'
 
+if RUBY_VERSION < '1.9.0'
+  gem 'posix-spawn'
+  gem 'uuid'
+end
+
 group :test do
   gem 'rake'
   gem 'rspec', '~> 2.11.0'
