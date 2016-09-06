@@ -30,7 +30,7 @@ at the ad-hoc needs that people occasionally have.
 Follow the [basic plugin install guide][install guide], taking all
 the code from lib and adding it to your MCollective $libdir
 
-[install guide]: http://projects.puppetlabs.com/projects/mcollective-plugins/wiki/InstalingPlugins
+[install guide]: https://docs.puppet.com/mcollective/deploy/plugins.html
 
 
 ## Configuring the agent
