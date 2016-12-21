@@ -13,7 +13,7 @@ the processes)
 To use this agent you need at least:
 
 * MCollective 2.2.4
-* Ruby 1.9 (for Process#spawn)
+* For Ruby 1.8.7 support: 'posix-spawn' and 'uuid' gem
 
 Please report any errors or make feature requests in the [MCOP jira project][MCOP]
 

@@ -1,5 +1,6 @@
 require 'securerandom'
 require 'pathname'
+require 'mcollective/agent/shell/job/backports' if RUBY_VERSION < '1.9.0'
 
 # The Job class manages the spawning and state tracking for a process as it's
 # running.
@@ -29,7 +30,7 @@ module MCollective
         def self.list
           jobs = []
           Dir.entries(state_path).each do |handle|
-            next if handle[0] == '.'
+            next if handle[0] == '.'[0]
             jobs << Job.new(handle)
           end
           return jobs
@@ -196,6 +197,8 @@ module MCollective
 
         def wrapper
           return <<-WRAPPER
+            #{File.read(File.join(File.dirname(__FILE__), 'job', 'backports.rb')) if RUBY_VERSION < '1.9.0'}
+
             command = IO.read("#{state_directory}/command").chomp
 
             options = {

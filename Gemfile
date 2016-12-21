@@ -15,3 +15,9 @@ if mcollective_version
 else
   gem 'mcollective-client', :require => false
 end
+
+platforms :ruby_18 do
+  gem 'posix-spawn'
+  gem 'uuid'
+  gem 'i18n', ' ~> 0.6.0' if mcollective_version == '~> 2.4.0'
+end
