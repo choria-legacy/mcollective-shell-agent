@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'mcollective/application/shell/watcher'
+require 'mcollective/application/shell_watcher'
 
 module MCollective
   class Application

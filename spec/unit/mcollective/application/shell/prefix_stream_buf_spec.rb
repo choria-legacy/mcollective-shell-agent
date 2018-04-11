@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'mcollective/application/shell/prefix_stream_buf'
+require 'mcollective/application/shell_prefix_stream_buf'
 
 module MCollective
   class Application
