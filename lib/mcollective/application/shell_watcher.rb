@@ -1,4 +1,4 @@
-require 'mcollective/application/shell/prefix_stream_buf'
+require 'mcollective/application/shell_prefix_stream_buf'
 
 # The Watcher class is a utility class for Application::Shell#watch_these.
 # It's effectively a tuple of [node, handle] to identify the command, and

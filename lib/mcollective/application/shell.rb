@@ -1,4 +1,4 @@
-require 'mcollective/application/shell/watcher'
+require 'mcollective/application/shell_watcher'
 
 class MCollective::Application::Shell < MCollective::Application
   description 'Run shell commands'
