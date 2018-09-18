@@ -133,7 +133,7 @@ END_OF_USAGE
         puts response[:data][:stdout]
         if response[:data][:stderr].size > 0
           count_fail_nodes += 1
-	  is_fail = true
+          is_fail = true
           fail_nodes << response[:sender]
           puts "    STDERR:"
           puts response[:data][:stderr]
@@ -143,13 +143,13 @@ END_OF_USAGE
 		  count_fail_nodes += 1
                   fail_nodes << response[:sender]
           end
-	  is_fail = true
+          is_fail = true
           puts "exitcode: #{response[:data][:exitcode]}"
         end
         puts ""
       else
         count_fail_nodes += 1
-	is_fail = true
+        is_fail = true
         fail_nodes << response[:sender]
         puts "#{response[:sender]}: ERROR: #{response.inspect}"
       end
