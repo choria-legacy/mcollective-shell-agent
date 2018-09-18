@@ -163,7 +163,7 @@ END_OF_USAGE
     if count_fail_nodes != 0
 	    puts "Failed nodes:"
             fail_nodes.each do |node|
-                puts nod
+                puts node
             end
     end
 
