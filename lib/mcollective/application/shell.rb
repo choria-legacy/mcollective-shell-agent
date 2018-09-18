@@ -142,6 +142,7 @@ END_OF_USAGE
 	  if is_fail == false
 		  count_fail_nodes += 1
                   fail_nodes << response[:sender]
+          end
 	  is_fail = true
           puts "exitcode: #{response[:data][:exitcode]}"
         end
@@ -154,6 +155,7 @@ END_OF_USAGE
       end
       if is_fail == false
         count_success_nodes += 1
+      end
     end
     puts "===================================================="
     puts "Summary:"
