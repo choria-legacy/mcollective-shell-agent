@@ -1,6 +1,12 @@
 # Shell agent
 
-[![Build Status](https://travis-ci.org/puppetlabs/mcollective-shell-agent.svg?branch=master)](https://travis-ci.org/puppetlabs/mcollective-shell-agent)
+## Deprecation Notice
+
+This repository holds legacy code related to The Marionette Collective project.  That project has been deprecated by Puppet Inc and the code donated to the Choria Project.
+
+Please review the [Choria Project Website](https://choria.io) and specifically the [MCollective Deprecation Notice](https://choria.io/mcollective) for further information and details about the future of the MCollective project.
+
+## Overview
 
 The shell agent allows you to start and manage shell commands via
 mcollective.
