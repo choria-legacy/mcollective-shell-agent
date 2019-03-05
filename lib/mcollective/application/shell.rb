@@ -123,21 +123,48 @@ END_OF_USAGE
     responses = client.run(:command => command)
     responses.sort_by! { |r| r[:sender] }
 
+    count_fail_nodes = 0
+    count_success_nodes = 0
+    fail_nodes = []
     responses.each do |response|
+      is_fail = false
       if response[:statuscode] == 0
         puts "#{response[:sender]}:"
         puts response[:data][:stdout]
         if response[:data][:stderr].size > 0
+          count_fail_nodes += 1
+          is_fail = true
+          fail_nodes << response[:sender]
           puts "    STDERR:"
           puts response[:data][:stderr]
         end
         if response[:data][:exitcode] != 0
+	  if is_fail == false
+		  count_fail_nodes += 1
+                  fail_nodes << response[:sender]
+          end
+          is_fail = true
           puts "exitcode: #{response[:data][:exitcode]}"
         end
         puts ""
       else
+        count_fail_nodes += 1
+        is_fail = true
+        fail_nodes << response[:sender]
         puts "#{response[:sender]}: ERROR: #{response.inspect}"
       end
+      if is_fail == false
+        count_success_nodes += 1
+      end
+    end
+    puts "===================================================="
+    puts "Summary:"
+    puts "Total #{response.length} nodes, #{count_success_nodes} success, #{count_fail_nodes} fail"
+    if count_fail_nodes != 0
+	    puts "Failed nodes:"
+            fail_nodes.each do |node|
+                puts node
+            end
     end
 
     printrpcstats :summarize => true, :caption => "Ran command: #{command}"
